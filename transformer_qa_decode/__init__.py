@@ -50,7 +50,7 @@ class TransformerQADecode():
 
     @torch.no_grad()
     def __call__(self, question: str, context: str, max_length: int = 512,
-                 stride: int = 256, n_best_size: int = 10, min_answer_token_length: int = 1, max_answer_token_length: int = 5):
+                 stride: int = 256, n_best_size: int = 10, min_answer_token_length: int = 1, max_answer_token_length: int = 10):
         self.model.eval()
 
         inputs = self.tokenizer(
