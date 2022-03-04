@@ -6,6 +6,9 @@ tokenizer = AutoTokenizer.from_pretrained("deepset/roberta-base-squad2")
 model = AutoModelForQuestionAnswering.from_pretrained(
     "deepset/roberta-base-squad2")
 
+# inference with gpu
+# model.to('cuda')
+
 qahl = TransformerQADecode(model=model, tokenizer=tokenizer)
 question = "Which name is also used to describe the Amazon rainforest in English?"
 context = """

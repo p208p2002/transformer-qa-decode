@@ -5,6 +5,9 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering
 tokenizer = AutoTokenizer.from_pretrained("abhilash1910/albert-squad-v2")
 model = AutoModelForQuestionAnswering.from_pretrained(
     "abhilash1910/albert-squad-v2")
+    
+# inference with gpu
+# model.to('cuda')
 
 qahl = TransformerQADecode(model=model, tokenizer=tokenizer)
 question = "What's my name?"
