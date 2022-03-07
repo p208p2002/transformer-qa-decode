@@ -1,4 +1,4 @@
-# Transformer-qa-decode
+# Transformer QA Decode
 A basic span-based decode strategy for transformer models, also provide local token mapping and global context mapping, which can present a [visualize demo](#visualize).
 
 ## Usage
