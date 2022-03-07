@@ -7,7 +7,7 @@ A basic span-based decode strategy for transformer models, also provide local to
 pip install -U https://github.com/p208p2002/transformer-qa-decode.git
 ```
 #### Example
-```
+```python
 from transformer_qa_decode import TransformerQADecode
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering
 
