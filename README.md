@@ -1,5 +1,5 @@
 # Transformer QA Decode
-A basic span-based decode strategy for transformer models, also provide local token mapping and global context mapping, which can present a [visualize demo](#visualize).
+A basic span-based decode strategy for transformer models, also provide local token mapping and global context mapping, which can present a [visualize demo](https://github.com/p208p2002/react-transformer-qa-decode-visualize).
 
 ## Usage
 #### Install
@@ -30,8 +30,3 @@ print(result)
 """
 ```
 > See more use case in [examples](examples)
-
-## Visualize
-Here is a visualize component for react
- 
-[react-transformer-qa-decode-visualize](react-transformer-qa-decode-visualize)
