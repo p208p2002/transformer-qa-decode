@@ -4,7 +4,7 @@ A basic span-based decode strategy for transformer models, also provide local to
 ## Usage
 #### Install
 ```
-pip install -U https://github.com/p208p2002/transformer-qa-decode.git
+pip install -U git+https://github.com/p208p2002/transformer-qa-decode.git
 ```
 #### Example
 ```python
