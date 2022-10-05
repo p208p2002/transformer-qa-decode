@@ -169,7 +169,8 @@ class TransformerQADecode():
             
             for i,new_score in enumerate(new_scores):
                 fregment_answer_results[i] = TagResult(
-                    *fregment_answer_results[i][:-1],score = new_score
+                    *fregment_answer_results[i][:-1],
+                    score = new_score
                 )
 
             fregment_answer_results = sorted(fregment_answer_results,key=lambda x:x.score,reverse=True)
