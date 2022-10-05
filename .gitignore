@@ -2,3 +2,4 @@
 poetry.lock
 dump*.json
 *__pycache__*
+test.py

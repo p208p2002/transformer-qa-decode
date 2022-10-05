@@ -1,7 +1,12 @@
 import torch
 from loguru import logger
 from collections import namedtuple
+import numpy as np
 
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0) # only difference
 
 def to_list(tensor):
     return tensor.detach().cpu().tolist()
@@ -36,7 +41,8 @@ def get_best_indexes(logits, n_best_size):
 
 
 TagResult = namedtuple('TagResult', ['answer_span', 'token', 'local_token_start',
-                       'local_token_end', 'global_context_start', 'global_context_end', 'start_logit', 'end_logit'])
+                       'local_token_end', 'global_context_start', 'global_context_end', 
+                       'start_logit', 'end_logit','score'])
 
 ClsLogit = namedtuple('ClsLogit', ['start_logit', 'end_logit'])
 
@@ -152,9 +158,23 @@ class TransformerQADecode():
                             global_context_end=offset_mapping[-1],
                             start_logit=start_logits[start_index],
                             end_logit=end_logits[end_index],
+                            score=-1
                         )
                     )
 
+            # compute score
+            start_probs = softmax([x.start_logit for x in fregment_answer_results])
+            end_probs = softmax([x.end_logit for x in fregment_answer_results])
+            new_scores = [s*e for s,e in zip(start_probs,end_probs)]
+            
+            for i,new_score in enumerate(new_scores):
+                fregment_answer_results[i] = TagResult(
+                    *fregment_answer_results[i][:-1],score = new_score
+                )
+
+            fregment_answer_results = sorted(fregment_answer_results,key=lambda x:x.score,reverse=True)
+         
+            # record
             answer_results.append(fregment_answer_results)
             cls_logits.append(fregment_cls_logits)
     
