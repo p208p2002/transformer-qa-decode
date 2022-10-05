@@ -38,19 +38,30 @@ def get_best_indexes(logits, n_best_size):
 TagResult = namedtuple('TagResult', ['answer_span', 'token', 'local_token_start',
                        'local_token_end', 'global_context_start', 'global_context_end', 'start_logit', 'end_logit'])
 
+ClsLogit = namedtuple('ClsLogit', ['start_logit', 'end_logit'])
+
 
 class TransformerQADecode():
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, tokenizer,is_squad_v2=False):
         self.model = model
         self.tokenizer = tokenizer
+        self.is_squad_v2 = is_squad_v2
 
         if str(self.model.device) == 'cpu':
             logger.warning(
                 "Model inference using cpu, consider use gpu for accelerate")
 
     @torch.no_grad()
-    def __call__(self, question: str, context: str, max_length: int = 512,
-                 stride: int = 256, n_best_size: int = 10, min_answer_token_length: int = 1, max_answer_token_length: int = 10):
+    def __call__(
+        self, 
+        question: str, context: str, 
+        max_length: int = 512,
+        stride: int = 384, 
+        n_best_size: int = 10, 
+        min_answer_token_length: int = 1, 
+        max_answer_token_length: int = 10,
+        return_cls_logits = False
+    ):
         self.model.eval()
 
         inputs = self.tokenizer(
@@ -65,12 +76,21 @@ class TransformerQADecode():
             padding=True
         )
 
+
+        # if True:
+        #     _input_ids = inputs['input_ids']
+        #     for x in _input_ids:
+        #         logger.debug(self.tokenizer.decode(x))
+    
+
         has_token_type_ids = True if 'token_type_ids' in inputs.keys() else False
         answer_results = []
+        cls_logits = []
         for i, (input_ids, attention_mask) in enumerate(zip(inputs.input_ids, inputs.attention_mask)):
             input_ids = input_ids.to(self.model.device)
             attention_mask = attention_mask.to(self.model.device)
             fregment_answer_results = []
+            fregment_cls_logits = []
             if has_token_type_ids:
                 model_output = self.model(
                     input_ids=input_ids.unsqueeze(0),
@@ -85,6 +105,15 @@ class TransformerQADecode():
                     input_ids=input_ids.unsqueeze(0),
                     attention_mask=attention_mask.unsqueeze(0)
                 )
+
+            cls_start_logit = model_output.start_logits[0][0]
+            cls_end_logit = model_output.end_logits[0][0]
+            fregment_cls_logits.append(
+                ClsLogit(
+                    start_logit=cls_start_logit,
+                    end_logit=cls_end_logit
+                )
+            )
 
             start_logits = to_list(model_output.start_logits)[0]
             end_logits = to_list(model_output.end_logits)[0]
@@ -101,7 +130,9 @@ class TransformerQADecode():
                     answer_token = input_decode[start_index:end_index+1]
                     if(len(answer_token) < min_answer_token_length or len(answer_token) > max_answer_token_length):
                         continue
-                    elif(check_has_skip_token(check_tokens=answer_token, skip_tokens=[self.tokenizer.cls_token, self.tokenizer.sep_token, self.tokenizer.pad_token])):
+                    if self.is_squad_v2 and check_has_skip_token(check_tokens=answer_token, skip_tokens=[self.tokenizer.sep_token, self.tokenizer.pad_token]):
+                        continue
+                    if not self.is_squad_v2 and check_has_skip_token(check_tokens=answer_token, skip_tokens=[self.tokenizer.cls_token,self.tokenizer.sep_token, self.tokenizer.pad_token]):
                         continue
                     if has_token_type_ids and check_segment_type_is_a(start_index, inputs.token_type_ids[i]):
                         continue
@@ -123,5 +154,11 @@ class TransformerQADecode():
                             end_logit=end_logits[end_index],
                         )
                     )
+
             answer_results.append(fregment_answer_results)
+            cls_logits.append(fregment_cls_logits)
+    
+        if return_cls_logits:
+            return answer_results,cls_logits
         return answer_results
+

@@ -1,3 +1,4 @@
 .python-version
 poetry.lock
 dump*.json
+*__pycache__*
